@@ -34,10 +34,10 @@ app.get('/', (req, res)=> {
 });
 
 //Post data from the API to a local URL
-const data = [];
+data = {};
 
 app.post('/api', (req, res)=> {
-    data.push(req.body);
+    Object.assign(data, req.body);
     res.send(data);
 });
 

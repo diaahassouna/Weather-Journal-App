@@ -1,18 +1,16 @@
 /* Global Variables */
 //Set API base URL and API key
-const cityName = 'Cairo';
-const stateCode = 'eg';
-const baseURL = `api.openweathermap.org/data/2.5/weather?q=${cityName},${stateCode}&appid=`; // append API Key
-const apiKey = '5c4e24f1b365e0d7ad62848adaa4dcd7';
+const baseURL = 'api.openweathermap.org/data/2.5/weather?zip='; // append zip code + API Key
+const apiKey = '&appid=5c4e24f1b365e0d7ad62848adaa4dcd7&units=metric';
 const apiKeyName = 'Default';
 
 // Create a new date instance dynamically with JS
 let d = new Date();
-let newDate = d.getMonth()+'.'+ d.getDate()+'.'+ d.getFullYear();
+let newDate = (d.getMonth() + 1)+'.'+ d.getDate()+'.'+ d.getFullYear();
 
 //Get Current weather data from OpenWeatherMap.com API
-const getWeather = async (baseURL, apiKey) => {
-    const response = await fetch(`https://${baseURL}${apiKey}`);
+const getWeather = async (baseURL, zipCode, apiKey) => {
+    const response = await fetch(`https://${baseURL}${zipCode}${apiKey}`);
 
     try {
         const weatherData = await response.json();
@@ -47,35 +45,65 @@ const getUserData = async (url = '', data = {}) => {
 //Initiate asynchrounus event on click
 document.getElementById('generate').addEventListener('click', (event)=> {
     event.preventDefault()
-    //Fetch User Content from the DOM
-    let zipCode = document.getElementById('zip').value;
-    let feelings = document.getElementById('feelings').value;
+ 
+    //Return Weather temperature asynchronously
+    const weather = async () => {
 
-    let userData = {
-        'zip-code': zipCode,
-        'feelings': feelings,
+        //Fetch User Content from the DOM and the OpenWeatherMap.com API
+        let zipCode = document.getElementById('zip').value;
+        let feelings = document.getElementById('feelings').value;
+
+        //validate zip code and feelings
+        const validate = async (zipCode, feelings) => {
+            let zipCodePattern = /^\d{5}$|^\d{5}-\d{4}$/;
+            let zipCodeTest = zipCodePattern.test(zipCode);
+
+            if (zipCodeTest == false) {
+                alert(`zip code doesn't match`);
+                break;
+            }
+            if (feelings == '') {
+                alert('Feelings are empty');
+                break;
+            }
+
+            //Initiate Get Current weather temperature
+            const weatherAsync = await getWeather(baseURL, zipCode, apiKey);
+            let temperature = weatherAsync.main.temp;
+
+            //Construct Project Data in the local server
+            let userData = {
+                'zip-code': zipCode,
+                'feelings': feelings,
+                'temp': temperature,
+                'date': newDate
+            };
+            console.log(userData);
+
+            //Initaite updating user content in the UI
+            await userContent(userData);
+
+            //Update temperature in the UI
+            document.getElementById('temp').innerHTML = `Temperature: ${temperature} °C`;
+            return userData;
+        }
+
+        //Initiate validation
+        await validate(zipCode, feelings);
     };
-    //Return User Content asynchronously
-    const userContent = async () => {
-        const userAsyncContent = await getUserData('/api', userData);
-        const lastUserContent = userAsyncContent[userAsyncContent.length - 1];
-        const lastZipCode = lastUserContent['zip-code'];
-        const lastFeelings = lastUserContent['feelings'];
 
+    //Return User Content asynchronously to the local server
+    const userContent = async (userData) => {
+        const userAsyncContent = await getUserData('/api', userData);
+        const lastZipCode = userAsyncContent['zip-code'];
+        const lastFeelings = userAsyncContent['feelings'];
+
+        //Update Date, zipCode and Feelings in the UI
         document.getElementById('date').innerHTML = `Date: ${newDate}`;
         document.getElementById('content').innerHTML = `Zipcode: ${lastZipCode}<br>Feelings: ${lastFeelings}`;
         return userAsyncContent;
-    }
-    //Return Weather temperature asynchronously
-    const weather = async () => {
-        const weatherAsync = await getWeather(baseURL, apiKey);
-        const temperature = weatherAsync.main.temp;
+    };
 
-        document.getElementById('temp').innerText = `Temperature: ${temperature}`;
-        return weatherAsync;
-    } 
-    
-    //Initiate functions
-    userContent();
+    //Initiate acynchromnus functions weather() and userContent() on click
     weather();
 });
