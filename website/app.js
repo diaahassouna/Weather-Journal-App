@@ -45,6 +45,10 @@ const getUserData = async (url = '', data = {}) => {
 //Initiate asynchrounus event on click
 document.getElementById('generate').addEventListener('click', (event)=> {
     event.preventDefault()
+
+    //Disable Error messages visibilty from the UI
+    document.getElementById('zip-code-error').style.display = 'none';
+    document.getElementById('feelings-error').style.display = 'none';
  
     //Return Weather temperature asynchronously
     const weather = async () => {
@@ -58,13 +62,37 @@ document.getElementById('generate').addEventListener('click', (event)=> {
             let zipCodePattern = /^\d{5}$|^\d{5}-\d{4}$/;
             let zipCodeTest = zipCodePattern.test(zipCode);
 
-            if (zipCodeTest == false) {
-                alert(`zip code doesn't match`);
-                break;
-            }
-            if (feelings == '') {
-                alert('Feelings are empty');
-                break;
+            //Generate zip code error message
+            const zipCodeMessage = () => {
+                const zipCodeError = document.getElementById('zip-code-error');
+                zipCodeError.style.display = 'block';
+                zipCodeError.style.color = 'red';
+                zipCodeError.style.fontSize = '0.75em';
+                zipCodeError.style.backgroundColor = '#fff';
+                zipCodeError.innerHTML = 'Zipcode must be like 12345 or 12345-6789.';
+            };
+
+            //Generate feelings error message
+            const feelingsMessage = () => {
+                const feelingsError = document.getElementById('feelings-error');
+                feelingsError.style.display = 'block';
+                feelingsError.style.color = 'red';
+                feelingsError.style.fontSize = '0.75em';
+                feelingsError.style.backgroundColor = '#fff';
+                feelingsError.innerHTML = 'You should type how are you feeling.';
+            };
+
+            //Validation conditions
+            if (zipCodeTest == false && feelings == '') {
+                zipCodeMessage();
+                feelingsMessage();
+                return;
+            } else if (zipCodeTest == false) {
+                zipCodeMessage();
+                return;
+            } else if (feelings == '') {
+                feelingsMessage();
+                return;
             }
 
             //Initiate Get Current weather temperature
