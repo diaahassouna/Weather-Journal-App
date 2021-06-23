@@ -106,7 +106,6 @@ document.getElementById('generate').addEventListener('click', (event)=> {
                 'temp': temperature,
                 'date': newDate
             };
-            console.log(userData);
 
             //Initaite updating user content in the UI
             await userContent(userData);
